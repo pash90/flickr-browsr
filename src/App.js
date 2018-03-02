@@ -1,5 +1,6 @@
 /** Imports */
 import React from 'react';
+import Lightbox from 'react-image-lightbox';
 
 /** Actions */
 import { fetchImages } from './actions/'
@@ -13,7 +14,9 @@ class App extends React.Component {
 
     this.state = {
       tag: 'pash',
-      items: []
+      items: [],
+      index: 0,
+      showLightBox: false
     }
   }
 
@@ -33,8 +36,20 @@ class App extends React.Component {
 
   getNewImages = () => fetchImages(this.state.tag, this.updateItems)
 
-  render() {
+  getLightBoxContents = () => {
     const { items } = this.state;
+
+    return items.map(item => item.media.m.replace('_m.', '_b.'));
+  }
+
+  toggleLightBox = index => () => this.setState(prevState => ({
+    index,
+    showLightBox: !prevState.showLightBox
+  }))
+
+  render() {
+    const { items, index, showLightBox } = this.state;
+    const lightBoxImages = this.getLightBoxContents();
 
     return (
       <div className="App">
@@ -46,10 +61,19 @@ class App extends React.Component {
         <div className="content">
           {items.map((item, key) => {
             return (
-              <div className="image" key={key} style={{ backgroundImage: `url('${item.media.m}?w=300')` }} />
+              <div className="image" key={key} style={{ backgroundImage: `url('${item.media.m}?w=400')` }} onClick={this.toggleLightBox(parseInt(key, 10))} />
             )
           })}
         </div>
+
+        {showLightBox && (
+          <Lightbox mainSrc={lightBoxImages[index]}
+            nextSrc={lightBoxImages[(index + 1) % lightBoxImages.length]}
+            prevSrc={lightBoxImages[(index + lightBoxImages.length - 1) % lightBoxImages.length]}
+            onCloseRequest={this.toggleLightBox(0)}
+            onMovePrevRequest={() => this.setState(prevState => ({ index: (index + lightBoxImages.length - 1) % lightBoxImages.length }))}
+            onMoveNextRequest={() => this.setState(prevState => ({ index: (index + 1) % lightBoxImages.length }))} />
+        )}
       </div>
     );
   }
